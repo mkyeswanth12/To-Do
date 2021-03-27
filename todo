@@ -1,0 +1,94 @@
+
+#!/usr/bin/env bash
+
+hdir="$HOME/todo"
+mfile=".todolist.txt"
+if [ ! -d "$hdir" ]
+ then
+ echo "Making Directory $hdir"
+ mkdir $hdir
+fi
+
+function addtolist() {
+  if [ -z "$2" ]
+      then
+          if [ ! -f $hdir/$mfile ]
+          then
+            touch $hdir/$mfile
+          fi
+  	      ab=$(cat $hdir/$mfile)
+  	      if [ "$ab" = "Notthing To Do!!" ]
+        	then
+  	        rm -fr $hdir/$mfile
+  	      fi
+  	      echo $1 >> $hdir/$mfile
+      else
+          file=$hdir/.$2
+          if [ -f "$file" ]
+            then
+          echo $1 >> $file
+          else
+          touch $file
+          echo $1 >> $file
+          fi
+  fi
+}
+
+function removefromelist() {
+  if [ -z "$2" ]
+  then
+    awk 'NR!='$1'{ print }' $hdir/$mfile > $hdir/$mfile.temp
+    mv $hdir/$mfile.temp  $hdir/$mfile
+    wq=$(cat $hdir/$mfile)
+     if [ -z "$wq" ]
+       then
+	     echo "Notthing To Do!!" > $hdir/$mfile
+	     cat $hdir/$mfile
+     fi
+  else
+    awk 'NR!='$1'{ print }' $hdir/.$2 > $hdir/.$2.temp
+    mv $hdir/.$2.temp  $hdir/.$2
+    wq=$(cat $hdir/.$2)
+     if [ -z "$wq" ]
+       then
+        rm -fr $hdir/.$2
+        echo "Notthing To Do!!"
+     fi
+  fi
+}
+
+function showtodolist() {
+  if [ -f "$hdir/.$1" ]
+  then
+    nl -s ") " $hdir/.$1
+  else
+    nl -s ") " $hdir/$mfile
+  fi
+}
+
+function fn_help() {
+echo To-Do-List
+echo
+echo "Usage: to-do-list <[OPTION] -add,-show,-rm,-clear>, <[OPTION]> Topic "
+}
+
+if [ "$1" = '-add' ]
+then
+    addtolist $2 $3
+elif [ "$1" = '-show' ]
+then
+    if [ "$2" = '-all' ]
+    then
+      ls -a $hdir
+    else
+      showtodolist $2
+    fi
+elif [ "$1" = '-rm' ]
+then
+    removefromelist $2 $3
+elif [ "$1" = '-clear' ]
+then
+    echo "Notthing To Do!!" > $hdir/$mfile
+else
+    fn_help
+fi
