@@ -1,94 +1,118 @@
 
 #!/usr/bin/env bash
 
+
+#############################################################
+#Task's and List
 hdir="$HOME/todo"
 mfile=".todolist.txt"
+timedir="$hdir/.timedir.txt"
+timedir1="$hdir/.timedir.txt.1"
+timedir2="$hdir/.timedir.txt.2"
+PDIR=~/Desktop/XNotts
+
 if [ ! -d "$hdir" ]
  then
  echo "Making Directory $hdir"
  mkdir $hdir
 fi
 
-function addtolist() {
-  if [ -z "$2" ]
-      then
-          if [ ! -f $hdir/$mfile ]
-          then
-            touch $hdir/$mfile
-          fi
-  	      ab=$(cat $hdir/$mfile)
-  	      if [ "$ab" = "Notthing To Do!!" ]
-        	then
-  	        rm -fr $hdir/$mfile
-  	      fi
-  	      echo $1 >> $hdir/$mfile
-      else
-          file=$hdir/.$2
-          if [ -f "$file" ]
-            then
-          echo $1 >> $file
-          else
-          touch $file
-          echo $1 >> $file
-          fi
-  fi
+if [ ! -d "$bdir" ]
+ then
+ echo "Making Directory $bdir"
+ mkdir $bdir
+fi
+
+function addtime() {
+  hrs1=$(($(($(date +%s) / 60)) / 60))
+  ttlhrs=$(expr $hrs1 + $1)
+  echo $ttlhrs >> $timedir
 }
 
-function removefromelist() {
-  if [ -z "$2" ]
-  then
+function showtime() {
+  hrs=$(($(($(date +%s) / 60)) / 60))
+  tls=$1
+  if [ -z "$tls" ]
+    then
+    return 0
+  fi
+  tl=$(expr $tls - $hrs)
+  echo $tl
+}
+
+function addtotask() {
+  if [ ! -f $hdir/$mfile ]
+      then
+      touch $hdir/$mfile
+      fi
+      ab=$(cat $hdir/$mfile)
+        if [ "$ab" = "Notthing To Do!!" ]
+      	then
+  	        rm -fr $hdir/$mfile
+  	    fi
+        if [ -z "$2" ]
+            then
+  	        echo "$1" >> $hdir/$mfile
+            echo >> $timedir
+          else
+            addtime $2
+            echo "$1" >> $hdir/$mfile
+          fi
+}
+
+function removefromtask() {
     awk 'NR!='$1'{ print }' $hdir/$mfile > $hdir/$mfile.temp
-    mv $hdir/$mfile.temp  $hdir/$mfile
+    mv $hdir/$mfile.temp $hdir/$mfile
     wq=$(cat $hdir/$mfile)
      if [ -z "$wq" ]
        then
 	     echo "Notthing To Do!!" > $hdir/$mfile
 	     cat $hdir/$mfile
      fi
-  else
-    awk 'NR!='$1'{ print }' $hdir/.$2 > $hdir/.$2.temp
-    mv $hdir/.$2.temp  $hdir/.$2
-    wq=$(cat $hdir/.$2)
-     if [ -z "$wq" ]
-       then
-        rm -fr $hdir/.$2
-        echo "Notthing To Do!!"
-     fi
-  fi
+     awk 'NR!='$1'{ print }' $timedir > $timedir.temp
+     mv $timedir.temp $timedir
 }
 
-function showtodolist() {
-  if [ -f "$hdir/.$1" ]
+function showtask() {
+  update=$(wc -l < $hdir/$mfile)
+  for (( i = 1; i <= $update; i++ )); do
+    abc=$(cat $timedir | awk NR==$i)
+    showtime $abc >> $timedir2
+  done
+  mv $timedir2 $timedir1
+    touch $hdir/temp.txt
+    nl -s ") " $hdir/$mfile > $hdir/temp.txt
+    pr -m -t $hdir/temp.txt $timedir1
+    rm $hdir/temp.txt
+}
+
+if [ "$1" = '-a' ]
+then
+   addtotask $2 $3
+fi
+if [ "$1" = '-r' ]
+then
+   removefromtask $2
+fi
+if [ "$1" = '-s' ]
+then
+   showtask
+fi
+
+#################################################################
+#help
+
+
+function help() {
+  echo "  Tms is a Simple TaskManagment System
+  usage: tms <Options> <Time in Hrs>
+  Options: tms -a          -addtotask
+               -r          -removefromtask
+               -s          -showtask
+}
+
+
+if [ -z "$1" ]
   then
-    nl -s ") " $hdir/.$1
-  else
-    nl -s ") " $hdir/$mfile
-  fi
-}
-
-function fn_help() {
-echo To-Do-List
-echo
-echo "Usage: to-do-list <[OPTION] -add,-show,-rm,-clear>, <[OPTION]> Topic "
-}
-
-if [ "$1" = '-add' ]
-then
-    addtolist $2 $3
-elif [ "$1" = '-show' ]
-then
-    if [ "$2" = '-all' ]
-    then
-      ls -a $hdir
-    else
-      showtodolist $2
-    fi
-elif [ "$1" = '-rm' ]
-then
-    removefromelist $2 $3
-elif [ "$1" = '-clear' ]
-then
-    echo "Notthing To Do!!" > $hdir/$mfile
-else
-    fn_help
+    help
 fi
