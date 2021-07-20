@@ -9,7 +9,7 @@ mfile=".todolist.txt"
 timedir="$hdir/.timedir.txt"
 timedir1="$hdir/.timedir.txt.1"
 timedir2="$hdir/.timedir.txt.2"
-PDIR=~/Desktop/XNotts
+
 
 if [ ! -d "$hdir" ]
  then
